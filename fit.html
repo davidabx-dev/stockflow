@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITSTRONG HOUSE — Topbar HUD Glassmorphism V2</title>
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            /* Futuristic Cyber Dark Tokens */
+            --bg-body: #02070d;
+            --topbar-bg: linear-gradient(135deg, rgba(10, 26, 42, 0.75) 0%, rgba(3, 14, 25, 0.88) 50%, rgba(2, 9, 17, 0.95) 100%);
+            --topbar-border: rgba(0, 245, 155, 0.32);
+            --topbar-border-subtle: rgba(255, 255, 255, 0.12);
+            
+            /* Neon Cyber Palette */
+            --neon-emerald: #00f59b;
+            --neon-blue: #38bdf8;
+            --neon-sapphire: #60a5fa;
+            --neon-amber: #fbbf24;
+            --neon-purple: #c084fc;
+            --neon-rose: #fb7185;
+            --neon-cyan: #22d3ee;
+            --neon-red: #ff453a;
+
+            /* Text */
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --text-muted: #64748b;
+
+            /* Radii & Transitions */
+            --radius-pill: 9999px;
+            --radius-card: 16px;
+            --radius-badge: 11px;
+            --transition-smooth: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-bounce: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Light Theme Cyber Clean Mode */
+        [data-theme="light"] {
+            --bg-body: #0b1522;
+            --topbar-bg: linear-gradient(135deg, rgba(16, 38, 62, 0.85) 0%, rgba(8, 22, 38, 0.94) 100%);
+            --topbar-border: rgba(56, 189, 248, 0.4);
+            --text-main: #ffffff;
+            --text-sub: #cbd5e1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(0, 245, 155, 0.12), transparent 45%),
+                radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.14), transparent 45%),
+                radial-gradient(circle at 50% 80%, rgba(192, 132, 252, 0.08), transparent 50%),
+                var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-main);
+            padding: 24px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .header-wrapper {
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ============================================================
+           TOPBAR PANEL HUD GLASS (ROBUSTO, ALINHADO & ULTRA-FUTURISTA)
+        ============================================================ */
+        .topbar-panel {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 16px 22px;
+            background: var(--topbar-bg);
+            border: 1px solid var(--topbar-border);
+            backdrop-filter: blur(28px) saturate(210%);
+            -webkit-backdrop-filter: blur(28px) saturate(210%);
+            border-radius: var(--radius-card);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.2),
+                inset 0 -1px 1px rgba(0, 245, 155, 0.15),
+                0 20px 50px rgba(0, 0, 0, 0.85),
+                0 0 40px rgba(0, 245, 155, 0.12);
+            z-index: 100;
+            overflow: visible;
+        }
+
+        /* Ambient Aura Neon Behind Topbar */
+        .topbar-panel::before {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 120px;
+            top: -30px;
+            left: 20px;
+            background: radial-gradient(ellipse, rgba(0, 245, 155, 0.22) 0%, rgba(56, 189, 248, 0.12) 50%, transparent 75%);
+            filter: blur(35px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .topbar-panel::after {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 100px;
+            top: -20px;
+            right: 40px;
+            background: radial-gradient(ellipse, rgba(56, 189, 248, 0.22) 0%, rgba(192, 132, 252, 0.14) 50%, transparent 75%);
+            filter: blur(35px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ============================================================
+           ROW 1: BRANDING & SYSTEM CONTROLS
+        ============================================================ */
+        .topbar-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* BRANDING */
+        .topbar-branding {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-logo-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 13px;
+            background: linear-gradient(145deg, rgba(0, 245, 155, 0.28), rgba(0, 50, 35, 0.8));
+            border: 1px solid rgba(0, 245, 155, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon-emerald);
+            box-shadow:
+                0 0 20px rgba(0, 245, 155, 0.35),
+                inset 0 0 12px rgba(0, 245, 155, 0.25),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+            transition: var(--transition-bounce);
+            cursor: pointer;
+        }
+
+        .topbar-logo-icon:hover {
+            transform: scale(1.08) rotate(3deg);
+            box-shadow: 0 0 28px rgba(0, 245, 155, 0.6), inset 0 0 16px rgba(0, 245, 155, 0.4);
+        }
+
+        .topbar-logo-icon svg {
+            width: 22px;
+            height: 22px;
+            filter: drop-shadow(0 0 8px rgba(0, 245, 155, 0.8));
+        }
+
+        .topbar-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .topbar-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .topbar-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.32rem;
+            font-weight: 900;
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topbar-title .title-fitstrong {
+            color: #ffffff;
+            background: linear-gradient(180deg, #ffffff 15%, #e2e8f0 55%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .topbar-title .title-house {
+            color: var(--neon-emerald);
+            background: linear-gradient(180deg, #00f59b 10%, #00d684 60%, #00995c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 12px rgba(0, 245, 155, 0.8)) drop-shadow(0 0 22px rgba(0, 245, 155, 0.4));
+        }
+
+        .badge-version {
+            background: linear-gradient(135deg, rgba(0, 245, 155, 0.22), rgba(0, 140, 255, 0.12));
+            border: 1px solid rgba(0, 245, 155, 0.5);
+            color: var(--neon-emerald);
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: var(--radius-pill);
+            letter-spacing: 0.6px;
+            box-shadow: 0 0 14px rgba(0, 245, 155, 0.25), inset 0 0 8px rgba(0, 245, 155, 0.1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .topbar-subtitle {
+            font-size: 0.74rem;
+            font-weight: 500;
+            color: var(--text-sub);
+            letter-spacing: 0.2px;
+        }
+
+        /* ACTIONS & CONTROLS */
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* THEME TOGGLE SWITCH */
+        .theme-toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: var(--radius-pill);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            cursor: pointer;
+            outline: none;
+            flex-shrink: 0;
+            transition: var(--transition-smooth);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .theme-toggle-switch:hover {
+            border-color: rgba(0, 245, 155, 0.6);
+            box-shadow: 0 0 16px rgba(0, 245, 155, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .theme-toggle-side-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .theme-toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #102418, #051009);
+            border: 1px solid rgba(0, 245, 155, 0.6);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 245, 155, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--neon-emerald);
+        }
+
+        .theme-toggle-switch.is-light .theme-toggle-slider {
+            transform: translateX(24px);
+            background: linear-gradient(135deg, #ffffff, #f0fdf4);
+            border-color: rgba(56, 189, 248, 0.7);
+            color: #f59e0b;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 12px rgba(56, 189, 248, 0.6);
+        }
+
+        /* STATUS PILLS (HUD GLASS) */
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: linear-gradient(145deg, rgba(0, 50, 35, 0.45) 0%, rgba(2, 20, 15, 0.75) 100%);
+            border: 1px solid rgba(0, 245, 155, 0.45);
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--neon-emerald);
+            box-shadow:
+                0 0 16px rgba(0, 245, 155, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            white-space: nowrap;
+            transition: var(--transition-smooth);
+        }
+
+        .status-pill:hover {
+            border-color: var(--neon-emerald);
+            box-shadow: 0 0 22px rgba(0, 245, 155, 0.35);
+        }
+
+        .status-radar {
+            position: relative;
+            width: 10px;
+            height: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .status-ping {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--neon-emerald);
+            opacity: 0.75;
+            animation: radarPing 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--neon-emerald);
+            box-shadow: 0 0 10px var(--neon-emerald);
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes radarPing {
+            0% { transform: scale(0.6); opacity: 0.9; }
+            75%, 100% { transform: scale(2.3); opacity: 0; }
+        }
+
+        /* SANDBOX / SECURITY PILL */
+        .sandbox-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 14px;
+            background: linear-gradient(145deg, rgba(8, 28, 52, 0.5) 0%, rgba(3, 14, 28, 0.75) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            box-shadow:
+                0 0 14px rgba(56, 189, 248, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+            transition: var(--transition-smooth);
+        }
+
+        .sandbox-pill:hover {
+            border-color: var(--neon-blue);
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+
+        .sandbox-pill svg {
+            color: var(--neon-blue);
+            filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+        }
+
+        /* USER PROFILE BUTTON */
+        .user-dropdown-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px 4px 5px;
+            background: linear-gradient(145deg, rgba(14, 35, 60, 0.6) 0%, rgba(4, 16, 30, 0.85) 100%);
+            border: 1px solid rgba(0, 245, 155, 0.35);
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            user-select: none;
+        }
+
+        .user-dropdown-btn:hover {
+            border-color: var(--neon-emerald);
+            background: linear-gradient(145deg, rgba(0, 245, 155, 0.15) 0%, rgba(6, 28, 48, 0.95) 100%);
+            box-shadow: 0 0 20px rgba(0, 245, 155, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(0, 245, 155, 0.35), rgba(0, 60, 40, 0.9));
+            border: 1px solid rgba(0, 245, 155, 0.7);
+            color: var(--neon-emerald);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.76rem;
+            box-shadow: 0 0 12px rgba(0, 245, 155, 0.35);
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .user-name {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .user-role {
+            font-size: 0.62rem;
+            color: var(--neon-emerald);
+            font-weight: 600;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .user-chevron {
+            color: var(--text-muted);
+            transition: transform 0.22s ease;
+        }
+
+        .user-dropdown-btn.open .user-chevron {
+            transform: rotate(180deg);
+            color: var(--neon-emerald);
+        }
+
+        /* USER DROPDOWN FLOATING POPUP */
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 220px;
+            background: linear-gradient(145deg, rgba(8, 22, 38, 0.96) 0%, rgba(3, 11, 20, 0.98) 100%);
+            border: 1px solid rgba(0, 245, 155, 0.4);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-radius: 14px;
+            box-shadow:
+                0 20px 45px rgba(0, 0, 0, 0.8),
+                0 0 25px rgba(0, 245, 155, 0.2),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.96);
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 200;
+        }
+
+        .user-dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 9px;
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-align: left;
+            width: 100%;
+            text-decoration: none;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 245, 155, 0.14);
+            color: var(--neon-emerald);
+            transform: translateX(4px);
+        }
+
+        .dropdown-item-danger {
+            color: var(--neon-red);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 4px;
+            padding-top: 10px;
+        }
+
+        .dropdown-item-danger:hover {
+            background: rgba(255, 69, 58, 0.18);
+            color: #ff766d;
+        }
+
+        /* ============================================================
+           ROW 2: NEON GRADIENT DIVIDER
+        ============================================================ */
+        .topbar-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(0, 245, 155, 0.4),
+                rgba(56, 189, 248, 0.5),
+                rgba(192, 132, 252, 0.4),
+                transparent
+            );
+            box-shadow: 0 0 8px rgba(0, 245, 155, 0.3);
+            margin: 2px 0;
+        }
+
+        /* ============================================================
+           ROW 3: MODULE NAVIGATION TABS WITH VIBRANT COLOR BADGES
+        ============================================================ */
+        .module-nav {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .module-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* MODULE TAB CAPSULE (HUD GLASS) */
+        .module-tab {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 15px 7px 8px;
+            background: linear-gradient(145deg, rgba(8, 25, 45, 0.5) 0%, rgba(3, 13, 25, 0.7) 100%);
+            border: 1px solid rgba(0, 140, 255, 0.16);
+            border-radius: var(--radius-pill);
+            color: #94a3b8;
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            flex-shrink: 0;
+            backdrop-filter: blur(14px);
+            position: relative;
+            user-select: none;
+        }
+
+        .module-tab:hover {
+            color: #ffffff;
+            background: linear-gradient(145deg, rgba(14, 45, 85, 0.75) 0%, rgba(6, 22, 45, 0.9) 100%);
+            border-color: rgba(56, 189, 248, 0.55);
+            transform: translateY(-2px);
+            box-shadow:
+                0 6px 20px rgba(0, 0, 0, 0.5),
+                0 0 18px rgba(56, 189, 248, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        /* ACTIVE TAB: FLOATING NEON GLASS CAPSULE */
+        .module-tab.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(0, 245, 155, 0.24) 0%, rgba(2, 38, 26, 0.7) 50%, rgba(1, 18, 12, 0.9) 100%);
+            border: 1px solid rgba(0, 245, 155, 0.75);
+            font-weight: 700;
+            box-shadow:
+                0 0 22px rgba(0, 245, 155, 0.35),
+                inset 0 0 14px rgba(0, 245, 155, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* COLOR-CODED ICON BADGE */
+        .tab-icon-badge {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition-bounce);
+            position: relative;
+        }
+
+        .module-tab:hover .tab-icon-badge {
+            transform: scale(1.18) rotate(4deg);
+        }
+
+        /* 1. Dashboard (Cyber Emerald) */
+        .tab-emerald .tab-icon-badge {
+            background: linear-gradient(145deg, rgba(0, 50, 40, 0.8), rgba(2, 25, 20, 0.95));
+            border: 1px solid rgba(0, 245, 155, 0.45);
+            color: var(--neon-emerald);
+        }
+        .module-tab.active.tab-emerald .tab-icon-badge,
+        .module-tab.tab-emerald:hover .tab-icon-badge {
+            background: rgba(0, 245, 155, 0.28);
+            border-color: var(--neon-emerald);
+            box-shadow: 0 0 14px rgba(0, 245, 155, 0.8), inset 0 0 6px rgba(0, 245, 155, 0.4);
+            filter: drop-shadow(0 0 6px rgba(0, 245, 155, 0.9));
+        }
+
+        /* 2. Turnstile IDFace (Cyber Amber) */
+        .tab-amber .tab-icon-badge {
+            background: linear-gradient(145deg, rgba(50, 35, 0, 0.8), rgba(25, 15, 2, 0.95));
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            color: var(--neon-amber);
+        }
+        .module-tab.active.tab-amber .tab-icon-badge,
+        .module-tab.tab-amber:hover .tab-icon-badge {
+            background: rgba(245, 158, 11, 0.28);
+            border-color: var(--neon-amber);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.8), inset 0 0 6px rgba(245, 158, 11, 0.4);
+            filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.9));
+        }
+        .module-tab.active.tab-amber {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.24) 0%, rgba(38, 26, 2, 0.7) 50%, rgba(18, 12, 1, 0.9) 100%);
+            border-color: rgba(245, 158, 11, 0.75);
+            box-shadow: 0 0 22px rgba(245, 158, 11, 0.35), inset 0 0 14px rgba(245, 158, 11, 0.2);
+        }
+
+        /* 3. Pix Orchestrator (Electric Blue) */
+        .tab-blue .tab-icon-badge {
+            background: linear-gradient(145deg, rgba(0, 42, 83, 0.8), rgba(2, 16, 31, 0.95));
+            border: 1px solid rgba(59, 130, 246, 0.45);
+            color: var(--neon-sapphire);
+        }
+        .module-tab.active.tab-blue .tab-icon-badge,
+        .module-tab.tab-blue:hover .tab-icon-badge {
+            background: rgba(59, 130, 246, 0.28);
+            border-color: var(--neon-sapphire);
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.8), inset 0 0 6px rgba(59, 130, 246, 0.4);
+            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.9));
+        }
+        .module-tab.active.tab-blue {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.24) 0%, rgba(4, 26, 55, 0.7) 50%, rgba(2, 12, 28, 0.9) 100%);
+            border-color: rgba(59, 130, 246, 0.75);
+            box-shadow: 0 0 22px rgba(59, 130, 246, 0.35), inset 0 0 14px rgba(59, 130, 246, 0.2);
+        }
+
+        /* 4. Students & LGPD (Neon Purple) */
+        .tab-purple .tab-icon-badge {
+            background: linear-gradient(145deg, rgba(40, 10, 60, 0.8), rgba(20, 3, 30, 0.95));
+            border: 1px solid rgba(168, 85, 247, 0.45);
+            color: var(--neon-purple);
+        }
+        .module-tab.active.tab-purple .tab-icon-badge,
+        .module-tab.tab-purple:hover .tab-icon-badge {
+            background: rgba(168, 85, 247, 0.28);
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 14px rgba(168, 85, 247, 0.8), inset 0 0 6px rgba(168, 85, 247, 0.4);
+            filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.9));
+        }
+        .module-tab.active.tab-purple {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.24) 0%, rgba(35, 4, 55, 0.7) 50%, rgba(18, 2, 28, 0.9) 100%);
+            border-color: rgba(168, 85, 247, 0.75);
+            box-shadow: 0 0 22px rgba(168, 85, 247, 0.35), inset 0 0 14px rgba(168, 85, 247, 0.2);
+        }
+
+        /* 5. AI Gemini Flash (Matrix Cyan) */
+        .tab-cyan .tab-icon-badge {
+            background: linear-gradient(145deg, rgba(0, 45, 55, 0.8), rgba(2, 20, 28, 0.95));
+            border: 1px solid rgba(6, 182, 212, 0.45);
+            color: var(--neon-cyan);
+        }
+        .module-tab.active.tab-cyan .tab-icon-badge,
+        .module-tab.tab-cyan:hover .tab-icon-badge {
+            background: rgba(6, 182, 212, 0.28);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 14px rgba(6, 182, 212, 0.8), inset 0 0 6px rgba(6, 182, 212, 0.4);
+            filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.9));
+        }
+        .module-tab.active.tab-cyan {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.24) 0%, rgba(2, 35, 42, 0.7) 50%, rgba(1, 16, 20, 0.9) 100%);
+            border-color: rgba(6, 182, 212, 0.75);
+            box-shadow: 0 0 22px rgba(6, 182, 212, 0.35), inset 0 0 14px rgba(6, 182, 212, 0.2);
+        }
+
+        /* 6. Student Portal (Neon Coral / Rose) */
+        .tab-rose .tab-icon-badge {
+            background: linear-gradient(145deg, rgba(50, 10, 20, 0.8), rgba(25, 2, 10, 0.95));
+            border: 1px solid rgba(244, 63, 94, 0.45);
+            color: var(--neon-rose);
+        }
+        .module-tab.active.tab-rose .tab-icon-badge,
+        .module-tab.tab-rose:hover .tab-icon-badge {
+            background: rgba(244, 63, 94, 0.28);
+            border-color: var(--neon-rose);
+            box-shadow: 0 0 14px rgba(244, 63, 94, 0.8), inset 0 0 6px rgba(244, 63, 94, 0.4);
+            filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.9));
+        }
+        .module-tab.active.tab-rose {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.24) 0%, rgba(42, 2, 12, 0.7) 50%, rgba(20, 1, 6, 0.9) 100%);
+            border-color: rgba(244, 63, 94, 0.75);
+            box-shadow: 0 0 22px rgba(244, 63, 94, 0.35), inset 0 0 14px rgba(244, 63, 94, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-wrapper">
+        <!-- TOPBAR PANEL ULTRA-MODERNO -->
+        <header class="topbar-panel">
+            
+            <!-- ROW 1: BRANDING + ACTIONS -->
+            <div class="topbar-header-row">
+                
+                <!-- BRANDING -->
+                <div class="topbar-branding">
+                    <div class="topbar-logo-icon" title="FITSTRONG System">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <div class="topbar-title-group">
+                        <div class="topbar-title-row">
+                            <h1 class="topbar-title">
+                                <span class="title-fitstrong">FITSTRONG</span>
+                                <span class="title-house">HOUSE</span>
+                            </h1>
+                            <span class="badge-version">
+                                <i data-lucide="zap" style="width: 10px; height: 10px;"></i>
+                                V2.0 SEGURA
+                            </span>
+                        </div>
+                        <p class="topbar-subtitle">Gestão de Academia • Controle Máximo • Performance Total</p>
+                    </div>
+                </div>
+
+                <!-- ACTIONS / BADGES / PROFILE -->
+                <div class="topbar-actions">
+                    
+                    <!-- THEME TOGGLE SWITCH -->
+                    <button type="button" class="theme-toggle-switch" id="themeToggle" aria-label="Alternar Tema" title="Alternar Tema">
+                        <span class="theme-toggle-slider" id="themeSlider">
+                            <i data-lucide="moon" style="width: 12px; height: 12px;"></i>
+                        </span>
+                        <span class="theme-toggle-side-icon">
+                            <i data-lucide="moon" style="width: 11px; height: 11px;"></i>
+                        </span>
+                        <span class="theme-toggle-side-icon">
+                            <i data-lucide="sun" style="width: 11px; height: 11px;"></i>
+                        </span>
+                    </button>
+
+                    <!-- ONLINE RADAR STATUS PILL -->
+                    <div class="status-pill" title="Dispositivo Conectado e Operando">
+                        <div class="status-radar">
+                            <div class="status-ping"></div>
+                            <div class="status-dot"></div>
+                        </div>
+                        <span>IDFace Mode Pro Online</span>
+                    </div>
+
+                    <!-- IA SANDBOX PILL -->
+                    <div class="sandbox-pill" title="Ambiente Seguro">
+                        <i data-lucide="shield" style="width: 13px; height: 13px;"></i>
+                        <span>IA Read-Only Sandbox</span>
+                    </div>
+
+                    <!-- USER PROFILE PILL & FLOATING DROPDOWN -->
+                    <div class="user-dropdown-btn" id="userMenuBtn">
+                        <div class="user-avatar">DA</div>
+                        <div class="user-info">
+                            <span class="user-name">David Admin</span>
+                            <span class="user-role">ADMINISTRADOR GERAL</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="user-chevron" style="width: 13px; height: 13px;"></i>
+
+                        <!-- Dropdown Menu -->
+                        <div class="user-dropdown-menu" id="userDropdown">
+                            <a href="#" class="dropdown-item">
+                                <i data-lucide="user" style="width: 15px; height: 15px;"></i>
+                                <span>Meu Perfil</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i data-lucide="lock" style="width: 15px; height: 15px;"></i>
+                                <span>Segurança</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i data-lucide="sliders" style="width: 15px; height: 15px;"></i>
+                                <span>Configurações</span>
+                            </a>
+                            <a href="#" class="dropdown-item dropdown-item-danger">
+                                <i data-lucide="log-out" style="width: 15px; height: 15px;"></i>
+                                <span>Sair</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 2: NEON GRADIENT LIGHT DIVIDER -->
+            <div class="topbar-divider"></div>
+
+            <!-- ROW 3: MODULE NAVIGATION TABS WITH COLOR BADGES -->
+            <nav class="module-nav" id="moduleNav">
+                <!-- 1. Dashboard (Cyber Emerald) -->
+                <button class="module-tab tab-emerald active" data-tab="dashboard">
+                    <div class="tab-icon-badge">
+                        <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
+                    </div>
+                    <span>Dashboard Executivo</span>
+                </button>
+
+                <!-- 2. IDFace Turnstile (Cyber Amber) -->
+                <button class="module-tab tab-amber" data-tab="turnstile">
+                    <div class="tab-icon-badge">
+                        <i data-lucide="scan-face" style="width: 14px; height: 14px;"></i>
+                    </div>
+                    <span>Cadastro & Simulados IDFace</span>
+                </button>
+
+                <!-- 3. Pix (Electric Blue) -->
+                <button class="module-tab tab-blue" data-tab="pix">
+                    <div class="tab-icon-badge">
+                        <i data-lucide="qr-code" style="width: 14px; height: 14px;"></i>
+                    </div>
+                    <span>Orquestrador Pix</span>
+                </button>
+
+                <!-- 4. Alunos & LGPD (Neon Purple) -->
+                <button class="module-tab tab-purple" data-tab="students">
+                    <div class="tab-icon-badge">
+                        <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                    </div>
+                    <span>Alunos & LGPD</span>
+                </button>
+
+                <!-- 5. AI Gemini (Matrix Cyan) -->
+                <button class="module-tab tab-cyan" data-tab="ai">
+                    <div class="tab-icon-badge">
+                        <i data-lucide="bot" style="width: 14px; height: 14px;"></i>
+                    </div>
+                    <span>IA Gemini Flash (Read-Only)</span>
+                </button>
+
+                <!-- 6. Portal (Neon Coral) -->
+                <button class="module-tab tab-rose" data-tab="portal">
+                    <div class="tab-icon-badge">
+                        <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+                    </div>
+                    <span>Portal do Aluno</span>
+                </button>
+            </nav>
+        </header>
+    </div>
+
+    <!-- Script de Inicialização dos Ícones e Interações -->
+    <script>
+        lucide.createIcons();
+
+        // 1. Alternância de Abas (Tabs) com Troca Dinâmica de Ativo
+        const tabs = document.querySelectorAll('.module-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // 2. Dropdown do Usuário com Animação e Fechamento ao Clicar Fora
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userMenuBtn.classList.toggle('open');
+            userDropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target)) {
+                userMenuBtn.classList.remove('open');
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // 3. Theme Toggle (Dark / Light)
+        const themeToggle = document.getElementById('themeToggle');
+        const themeSlider = document.getElementById('themeSlider');
+        let isLight = false;
+
+        themeToggle.addEventListener('click', () => {
+            isLight = !isLight;
+            document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+            themeToggle.classList.toggle('is-light', isLight);
+            
+            themeSlider.innerHTML = isLight 
+                ? '<i data-lucide="sun" style="width: 12px; height: 12px;"></i>' 
+                : '<i data-lucide="moon" style="width: 12px; height: 12px;"></i>';
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

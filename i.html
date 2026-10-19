@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distribuição do Estoque</title>
+  <!-- Fonte com estética tecnológica -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-card: #030a16;
+      --border-cyan: rgba(0, 160, 255, 0.35);
+      --border-bright: #00d2ff;
+      --text-main: #ffffff;
+      --text-muted: #d1d5db;
+      
+      /* Cores neon dos segmentos */
+      --color-green: #00e676;
+      --color-yellow: #ffb800;
+      --color-blue: #2979ff;
+      --color-red: #ff334b;
+      
+      --glow-green: 0 0 14px rgba(0, 230, 118, 0.6);
+      --glow-yellow: 0 0 14px rgba(255, 184, 0, 0.6);
+      --glow-blue: 0 0 14px rgba(41, 121, 255, 0.6);
+      --glow-red: 0 0 14px rgba(255, 51, 75, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #010409;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+
+    /* Container Principal com Estilo HUD / Sci-Fi */
+    .hud-card {
+      position: relative;
+      width: 580px;
+      background: radial-gradient(circle at 30% 50%, rgba(6, 25, 48, 0.95), var(--bg-card) 85%);
+      border: 1px solid var(--border-cyan);
+      border-radius: 12px;
+      padding: 24px 28px;
+      box-shadow: 0 0 30px rgba(0, 140, 255, 0.12), inset 0 0 20px rgba(0, 140, 255, 0.05);
+      overflow: hidden;
+    }
+
+    /* Cantos chanfrados e detalhes tecnológicos nas bordas */
+    .hud-card::before, .hud-card::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--border-bright);
+      pointer-events: none;
+    }
+
+    .hud-card::before {
+      top: 0;
+      left: 0;
+      border-top: 2px solid var(--border-bright);
+      border-left: 2px solid var(--border-bright);
+      border-top-left-radius: 12px;
+    }
+
+    .hud-card::after {
+      bottom: 0;
+      right: 0;
+      border-bottom: 2px solid var(--border-bright);
+      border-right: 2px solid var(--border-bright);
+      border-bottom-right-radius: 12px;
+    }
+
+    /* Título do Card */
+    .hud-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-main);
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    /* Layout interno: Gráfico à esquerda, Legenda à direita */
+    .hud-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+    }
+
+    /* Container do Gráfico */
+    .chart-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg); /* Começa no topo (12h) */
+    }
+
+    .chart-segment {
+      fill: none;
+      stroke-width: 22;
+      stroke-linecap: butt;
+      transition: stroke-width 0.3s ease, filter 0.3s ease;
+      cursor: pointer;
+    }
+
+    .chart-segment:hover {
+      stroke-width: 25;
+      filter: brightness(1.25);
+    }
+
+    /* Holograma Central (Cubo 3D e Radar) */
+    .hologram-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90px;
+      height: 90px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .hologram-svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 6px rgba(0, 220, 255, 0.75));
+    }
+
+    .radar-ring {
+      fill: none;
+      stroke: rgba(0, 200, 255, 0.22);
+      stroke-width: 1;
+      stroke-dasharray: 4, 3;
+    }
+
+    .cube-line {
+      fill: none;
+      stroke: #00e5ff;
+      stroke-width: 1.2;
+      stroke-linejoin: round;
+    }
+
+    .cube-inner-line {
+      fill: none;
+      stroke: rgba(0, 229, 255, 0.45);
+      stroke-width: 0.9;
+    }
+
+    /* Legenda e Lista de Valores */
+    .legend-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex-grow: 1;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 1.05rem;
+      transition: transform 0.2s ease;
+    }
+
+    .legend-item:hover {
+      transform: translateX(4px);
+    }
+
+    .legend-label-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Ícone indicador arredondado */
+    .legend-badge {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .legend-name {
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .legend-value {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text-main);
+      min-width: 65px;
+      text-align: right;
+    }
+
+    /* Aplicação de cores e sombras específicas */
+    .badge-green { background-color: var(--color-green); box-shadow: var(--glow-green); }
+    .badge-yellow { background-color: var(--color-yellow); box-shadow: var(--glow-yellow); }
+    .badge-blue { background-color: var(--color-blue); box-shadow: var(--glow-blue); }
+    .badge-red { background-color: var(--color-red); box-shadow: var(--glow-red); }
+
+    .seg-green { stroke: var(--color-green); filter: drop-shadow(0 0 6px var(--color-green)); }
+    .seg-yellow { stroke: var(--color-yellow); filter: drop-shadow(0 0 6px var(--color-yellow)); }
+    .seg-blue { stroke: var(--color-blue); filter: drop-shadow(0 0 6px var(--color-blue)); }
+    .seg-red { stroke: var(--color-red); filter: drop-shadow(0 0 6px var(--color-red)); }
+  </style>
+</head>
+<body>
+
+  <div class="hud-card">
+    <h2 class="hud-title">DISTRIBUIÇÃO DO ESTOQUE</h2>
+    
+    <div class="hud-content">
+      <!-- Donut Chart com Holograma -->
+      <div class="chart-container">
+        <svg class="chart-svg" viewBox="0 0 200 200" id="donutChart">
+          <!-- Os arcos SVG serão inseridos via JavaScript com precisão matemática -->
+        </svg>
+
+        <!-- Holograma central do Cubo 3D / HUD -->
+        <div class="hologram-center">
+          <svg class="hologram-svg" viewBox="0 0 100 100">
+            <!-- Anéis de Radar HUD -->
+            <circle class="radar-ring" cx="50" cy="50" r="42" />
+            <circle class="radar-ring" cx="50" cy="50" r="32" />
+            <circle class="radar-ring" cx="50" cy="50" r="22" />
+            
+            <!-- Cubo Isométrico Wireframe -->
+            <!-- Contorno Hexagonal Externo -->
+            <polygon class="cube-line" points="50,24 72,37 72,63 50,76 28,63 28,37" />
+            
+            <!-- Linhas dos Vértices Internos até o Centro (50, 50) -->
+            <line class="cube-line" x1="50" y1="50" x2="50" y2="24" />
+            <line class="cube-line" x1="50" y1="50" x2="72" y2="63" />
+            <line class="cube-line" x1="50" y1="50" x2="28" y2="63" />
+            
+            <!-- Estrutura interna em wireframe holográfico -->
+            <line class="cube-inner-line" x1="50" y1="50" x2="72" y2="37" />
+            <line class="cube-inner-line" x1="50" y1="50" x2="28" y2="37" />
+            <line class="cube-inner-line" x1="50" y1="50" x2="50" y2="76" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Legenda com Valores -->
+      <ul class="legend-list" id="legendList">
+        <!-- Renderizado dinamicamente pelo JS -->
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Dados fiéis aos apresentados na imagem
+    const stockData = [
+      { id: 'disponivel', label: 'Disponível', value: 64.2, colorClass: 'green' },
+      { id: 'reservado', label: 'Reservado', value: 15.2, colorClass: 'yellow' },
+      { id: 'transito', label: 'Em trânsito', value: 12.1, colorClass: 'blue' },
+      { id: 'bloqueado', label: 'Bloqueado', value: 8.5, colorClass: 'red' }
+    ];
+
+    function renderComponent() {
+      const svg = document.getElementById('donutChart');
+      const legend = document.getElementById('legendList');
+      
+      const radius = 72;
+      const circumference = 2 * Math.PI * radius;
+      const gapPercent = 0.4; // Pequeno espaçamento escuro entre os blocos
+      
+      let accumulatedPercent = 0;
+
+      stockData.forEach(item => {
+        // Cálculo do traço do arco SVG
+        const effectivePercent = Math.max(0, item.value - gapPercent);
+        const strokeDash = (effectivePercent / 100) * circumference;
+        const strokeSpace = circumference - strokeDash;
+        const strokeOffset = - (accumulatedPercent / 100) * circumference;
+
+        // Criação do segmento SVG
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '100');
+        circle.setAttribute('cy', '100');
+        circle.setAttribute('r', radius.toString());
+        circle.setAttribute('class', `chart-segment seg-${item.colorClass}`);
+        circle.setAttribute('stroke-dasharray', `${strokeDash} ${strokeSpace}`);
+        circle.setAttribute('stroke-dashoffset', strokeOffset.toString());
+        
+        svg.appendChild(circle);
+
+        // Criação do item da legenda
+        const li = document.createElement('li');
+        li.className = 'legend-item';
+        li.innerHTML = `
+          <div class="legend-label-group">
+            <span class="legend-badge badge-${item.colorClass}"></span>
+            <span class="legend-name">${item.label}</span>
+          </div>
+          <span class="legend-value">${item.value.toFixed(1)}%</span>
+        `;
+        legend.appendChild(li);
+
+        accumulatedPercent += item.value;
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', renderComponent);
+  </script>
+
+</body>
+</html>

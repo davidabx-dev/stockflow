@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Card Financeiro Neon — Ultra HD Wave</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #02070c;
+            font-family: Arial, Helvetica, sans-serif;
+            overflow: hidden;
+        }
+
+        .card {
+            position: relative;
+            width: 335px;
+            height: 220px;
+            padding: 20px 28px;
+            border-radius: 16px;
+            background:
+                radial-gradient(circle at 50% 100%,
+                    rgba(0, 83, 160, 0.13),
+                    transparent 45%),
+                linear-gradient(145deg,
+                    #041018 0%,
+                    #02080d 48%,
+                    #02070b 100%);
+            border: 1px solid rgba(0, 125, 205, 0.52);
+            box-shadow:
+                inset 0 0 18px rgba(0, 88, 145, 0.08),
+                0 0 18px rgba(0, 85, 140, 0.08);
+            overflow: hidden;
+        }
+
+        /* Brilho externo */
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow:
+                inset 0 0 0 1px rgba(0, 170, 255, 0.04),
+                inset 0 0 25px rgba(0, 90, 150, 0.05);
+        }
+
+        /* Brilho diagonal */
+        .card::after {
+            content: "";
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            top: -100px;
+            left: -80px;
+            background: rgba(0, 107, 190, 0.07);
+            filter: blur(35px);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .top {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: flex-start;
+            gap: 17px;
+        }
+
+        /* ÍCONE */
+        .icon {
+            width: 56px;
+            height: 56px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background:
+                linear-gradient(145deg,
+                    rgba(0, 42, 83, 0.48),
+                    rgba(2, 16, 31, 0.85));
+            border: 1px solid rgba(0, 100, 210, 0.55);
+            box-shadow:
+                inset 0 0 12px rgba(0, 111, 255, 0.09),
+                0 0 10px rgba(0, 92, 190, 0.08);
+        }
+
+        .icon svg {
+            width: 38px;
+            height: 38px;
+            overflow: visible;
+        }
+
+        .icon path {
+            stroke: #2b8fff;
+            stroke-width: 2.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 3px rgba(31, 131, 255, 0.9));
+        }
+
+        /* TEXTOS */
+        .content {
+            padding-top: 2px;
+        }
+
+        .title {
+            color: rgba(235, 242, 249, 0.84);
+            font-size: 18px;
+            line-height: 1;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+        }
+
+        .value {
+            margin-top: 14px;
+            color: #eef3f7;
+            font-size: 27px;
+            line-height: 1;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+        }
+
+        .variation {
+            margin-top: 9px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #00ee58;
+            font-size: 18px;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(0, 238, 88, 0.25);
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 10px solid #00ee58;
+            position: relative;
+            top: -1px;
+            filter: drop-shadow(0 0 3px rgba(0, 238, 88, 0.7));
+        }
+
+        /* ÁREA DO GRÁFICO */
+        .chart-area {
+            position: absolute;
+            left: 11px;
+            right: 11px;
+            bottom: 11px;
+            height: 79px;
+            z-index: 1;
+            overflow: hidden;
+            border-radius: 0 0 12px 12px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* LINHA HORIZONTAL DISCRETA */
+        .divider {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 58%;
+            height: 1px;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(0, 85, 150, 0.12),
+                    transparent);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Brilho inferior */
+        .bottom-glow {
+            position: absolute;
+            left: 15%;
+            right: 15%;
+            bottom: -25px;
+            height: 65px;
+            background: rgba(0, 92, 194, 0.12);
+            filter: blur(25px);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+</head>
+
+<body>
+
+    <div class="card">
+
+        <div class="top">
+
+            <!-- ÍCONE -->
+            <div class="icon">
+                <svg viewBox="0 0 40 40" fill="none">
+                    <path d="M20 4V27" />
+                    <path d="M11 18L20 27L29 18" />
+                    <path d="M8 33H32" />
+                </svg>
+            </div>
+
+            <!-- INFORMAÇÕES -->
+            <div class="content">
+
+                <div class="title">
+                    ENTRADAS
+                </div>
+
+                <div class="value" id="value">
+                    R$ 85.420,00
+                </div>
+
+                <div class="variation">
+                    <span class="arrow"></span>
+                    <span>15,6%</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- GRÁFICO NEON THREE.JS DE ULTRA ALTA DEFINIÇÃO -->
+        <div class="chart-area" id="chart-area">
+            <div class="divider"></div>
+            <canvas id="chart"></canvas>
+        </div>
+
+        <div class="bottom-glow"></div>
+
+    </div>
+
+    <script>
+        (() => {
+            'use strict';
+
+            /* ============================================================
+               1. MOTOR THREE.JS COM PROJEÇÃO CORRETA E ULTRA ALTA DEFINIÇÃO
+            ============================================================ */
+            const container = document.getElementById("chart-area");
+            const canvas = document.getElementById("chart");
+
+            let rect = container.getBoundingClientRect();
+            let width = rect.width || 313;
+            let height = rect.height || 79;
+
+            const scene = new THREE.Scene();
+
+            // Câmera Ortográfica em Coordenadas de Pixels de Tela (0,0 no canto superior-esquerdo)
+            const camera = new THREE.OrthographicCamera(0, width, 0, height, -10, 10);
+            camera.position.z = 5;
+
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true,
+                powerPreference: 'high-performance'
+            });
+            // HiDPI Supersampling (até 3x DPR para nitidez Retina de 4K)
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
+            renderer.setSize(width, height);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.35;
+
+            const COLORS = {
+                core: new THREE.Color(0xFFFFFF),        // Centro puro branco ultra brilhante
+                coreCyan: new THREE.Color(0xD2F2FF),    // Filete ciano luminoso
+                innerCyan: new THREE.Color(0x38BDF8),   // Azul elétrico brilhante
+                neonBlue: new THREE.Color(0x168BFF),    // Azul neon principal
+                deepBlue: new THREE.Color(0x0653C7),    // Azul profundo
+                atmosphere: new THREE.Color(0x032773),  // Aura externa atmosférica
+                beam: new THREE.Color(0x1076EB)         // Feixes verticais
+            };
+
+            /*
+              Silhueta original dos 58 pontos normalizados [0..1]
+            */
+            const points2D = [
+                [-0.94, -0.18], [-0.91, -0.17], [-0.885, -0.12], [-0.855, -0.095],
+                [-0.825, -0.12], [-0.795, -0.165], [-0.760, -0.075], [-0.725, 0.015],
+                [-0.690, 0.17], [-0.655, 0.30], [-0.62, 0.22], [-0.585, 0.10],
+                [-0.55, 0.055], [-0.515, -0.005], [-0.48, -0.095], [-0.445, -0.18],
+                [-0.41, -0.125], [-0.375, -0.085], [-0.34, -0.03], [-0.305, 0.07],
+                [-0.27, 0.145], [-0.235, 0.09], [-0.20, 0.045], [-0.165, 0.11],
+                [-0.13, 0.20], [-0.095, 0.305], [-0.06, 0.47], [-0.025, 0.67],
+                [0.008, 0.84], [0.04, 0.745], [0.075, 0.54], [0.11, 0.31],
+                [0.145, 0.18], [0.175, 0.11], [0.205, 0.19], [0.235, 0.10],
+                [0.27, 0.035], [0.305, -0.035], [0.34, 0.03], [0.375, 0.12],
+                [0.408, 0.07], [0.44, 0.145], [0.472, 0.23], [0.505, 0.29],
+                [0.538, 0.22], [0.57, 0.125], [0.602, 0.045], [0.635, -0.025],
+                [0.667, 0.06], [0.70, 0.18], [0.732, 0.205], [0.765, 0.28],
+                [0.798, 0.36], [0.83, 0.27], [0.862, 0.21], [0.895, 0.31],
+                [0.925, 0.37], [0.95, 0.30]
+            ];
+
+            let basePoints = [];
+            let dynamicPoints = [];
+            const SAMPLES_COUNT = 480;
+
+            function mapToScreen(normX, normY) {
+                const px = 6 + ((normX + 0.94) / (0.95 + 0.94)) * (width - 12);
+                const py = (height - 6) - ((normY + 0.22) / 1.10) * (height - 14);
+                return new THREE.Vector3(px, py, 0);
+            }
+
+            function buildCurve() {
+                const source = points2D.map(([x, y]) => mapToScreen(x, y));
+                const curve = new THREE.CatmullRomCurve3(source, false, 'catmullrom', 0.22);
+                basePoints = curve.getPoints(SAMPLES_COUNT);
+                dynamicPoints = basePoints.map(p => p.clone());
+            }
+
+            /*
+              Cálculo de Normais em Pixels Reais com Suavização Gaussiana Contínua
+            */
+            function computeScreenNormals(points, smoothRadius = 4) {
+                const count = points.length;
+                const normals = new Float32Array(count * 2);
+
+                for (let i = 0; i < count; i++) {
+                    let avgTx = 0, avgTy = 0, weightSum = 0;
+
+                    for (let offset = -smoothRadius; offset <= smoothRadius; offset++) {
+                        const idx0 = Math.max(0, Math.min(count - 1, i + offset - 1));
+                        const idx2 = Math.max(0, Math.min(count - 1, i + offset + 1));
+                        const tx = points[idx2].x - points[idx0].x;
+                        const ty = points[idx2].y - points[idx0].y;
+                        const w = Math.exp(-(offset * offset) / (2 * smoothRadius));
+
+                        avgTx += tx * w;
+                        avgTy += ty * w;
+                        weightSum += w;
+                    }
+
+                    avgTx /= weightSum;
+                    avgTy /= weightSum;
+
+                    const len = Math.hypot(avgTx, avgTy) || 1;
+                    normals[i * 2 + 0] = -avgTy / len;
+                    normals[i * 2 + 1] = avgTx / len;
+                }
+                return normals;
+            }
+
+            /*
+              Shader de Fita Neon com Anti-Aliasing e Decaimento Gaussiano de Luz
+            */
+            const ribbonVertexShader = `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `;
+
+            const ribbonFragmentShader = `
+                uniform vec3 uColor;
+                uniform float uOpacity;
+                uniform float uExponent;
+                uniform float uPulse;
+                varying vec2 vUv;
+
+                void main() {
+                    float dist = abs(vUv.y - 0.5) * 2.0;
+                    float alpha = exp(-pow(dist * 2.0, uExponent * 0.5));
+                    alpha *= smoothstep(1.0, 0.88, dist);
+                    alpha *= uOpacity * uPulse;
+
+                    gl_FragColor = vec4(uColor, alpha);
+                }
+            `;
+
+            function createRibbonGeometry(points, pixelWidth, zOffset, normals) {
+                const count = points.length;
+                const verts = new Float32Array(count * 6);
+                const uvs = new Float32Array(count * 4);
+                const indices = new Uint32Array((count - 1) * 6);
+                const halfW = pixelWidth * 0.5;
+
+                for (let i = 0; i < count; i++) {
+                    const p = points[i];
+                    const nx = normals[i * 2 + 0];
+                    const ny = normals[i * 2 + 1];
+
+                    const idx = i * 6;
+                    verts[idx + 0] = p.x + nx * halfW;
+                    verts[idx + 1] = p.y + ny * halfW;
+                    verts[idx + 2] = zOffset;
+
+                    verts[idx + 3] = p.x - nx * halfW;
+                    verts[idx + 4] = p.y - ny * halfW;
+                    verts[idx + 5] = zOffset;
+
+                    const u = i / (count - 1);
+                    uvs[i * 4 + 0] = u;
+                    uvs[i * 4 + 1] = 0.0;
+                    uvs[i * 4 + 2] = u;
+                    uvs[i * 4 + 3] = 1.0;
+                }
+
+                for (let i = 0; i < count - 1; i++) {
+                    const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
+                    const k = i * 6;
+                    indices[k + 0] = a; indices[k + 1] = b; indices[k + 2] = c;
+                    indices[k + 3] = b; indices[k + 4] = d; indices[k + 5] = c;
+                }
+
+                const g = new THREE.BufferGeometry();
+                g.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+                g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+                g.setIndex(new THREE.BufferAttribute(indices, 1));
+                return g;
+            }
+
+            function updateRibbonGeometry(geometry, points, pixelWidth, zOffset, normals) {
+                const count = points.length;
+                const pos = geometry.attributes.position.array;
+                const halfW = pixelWidth * 0.5;
+
+                for (let i = 0; i < count; i++) {
+                    const p = points[i];
+                    const nx = normals[i * 2 + 0];
+                    const ny = normals[i * 2 + 1];
+
+                    const idx = i * 6;
+                    pos[idx + 0] = p.x + nx * halfW;
+                    pos[idx + 1] = p.y + ny * halfW;
+                    pos[idx + 2] = zOffset;
+
+                    pos[idx + 3] = p.x - nx * halfW;
+                    pos[idx + 4] = p.y - ny * halfW;
+                    pos[idx + 5] = zOffset;
+                }
+                geometry.attributes.position.needsUpdate = true;
+            }
+
+            /*
+              Degradê Inferior Suave
+            */
+            const trailVertex = `
+                varying float vFade;
+                void main() {
+                    vFade = uv.y;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `;
+
+            const trailFragment = `
+                uniform vec3 uColor;
+                uniform float uOpacity;
+                uniform float uPulse;
+                varying float vFade;
+
+                void main() {
+                    float fade = smoothstep(0.90, 0.0, vFade);
+                    fade = pow(fade, 2.3);
+                    float alpha = uOpacity * fade * uPulse;
+                    gl_FragColor = vec4(uColor, alpha);
+                }
+            `;
+
+            function createTrailGeometry(points, pixelHeight, zOffset, normals) {
+                const count = points.length;
+                const verts = new Float32Array(count * 6);
+                const uvs = new Float32Array(count * 4);
+                const indices = new Uint32Array((count - 1) * 6);
+
+                for (let i = 0; i < count; i++) {
+                    const p = points[i];
+                    const nx = normals[i * 2 + 0];
+                    const ny = normals[i * 2 + 1];
+                    const base = i * 6;
+
+                    verts[base + 0] = p.x + nx * 1.5;
+                    verts[base + 1] = p.y + ny * 1.5;
+                    verts[base + 2] = zOffset;
+
+                    verts[base + 3] = p.x;
+                    verts[base + 4] = p.y + pixelHeight;
+                    verts[base + 5] = zOffset;
+
+                    const u = i / (count - 1);
+                    uvs[i * 4 + 0] = u;
+                    uvs[i * 4 + 1] = 0.0;
+                    uvs[i * 4 + 2] = u;
+                    uvs[i * 4 + 3] = 1.0;
+                }
+
+                for (let i = 0; i < count - 1; i++) {
+                    const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
+                    const k = i * 6;
+                    indices[k + 0] = a; indices[k + 1] = b; indices[k + 2] = c;
+                    indices[k + 3] = b; indices[k + 4] = d; indices[k + 5] = c;
+                }
+
+                const g = new THREE.BufferGeometry();
+                g.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+                g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+                g.setIndex(new THREE.BufferAttribute(indices, 1));
+                return g;
+            }
+
+            function updateTrailGeometry(geometry, points, pixelHeight, zOffset, normals) {
+                const count = points.length;
+                const pos = geometry.attributes.position.array;
+                for (let i = 0; i < count; i++) {
+                    const p = points[i];
+                    const nx = normals[i * 2 + 0];
+                    const ny = normals[i * 2 + 1];
+                    const base = i * 6;
+
+                    pos[base + 0] = p.x + nx * 1.5;
+                    pos[base + 1] = p.y + ny * 1.5;
+                    pos[base + 2] = zOffset;
+
+                    pos[base + 3] = p.x;
+                    pos[base + 4] = p.y + pixelHeight;
+                    pos[base + 5] = zOffset;
+                }
+                geometry.attributes.position.needsUpdate = true;
+            }
+
+            /*
+              Composição Neon de Alta Fidelidade (Calibrada em Pixels Exatos)
+            */
+            let rootGroup, endGlowDot;
+            let trailMesh, trailMat;
+            let ribbonLayers = [];
+
+            function createNeonComposition() {
+                rootGroup = new THREE.Group();
+
+                const normals = computeScreenNormals(dynamicPoints, 4);
+
+                const layerDefs = [
+                    {
+                        id: 'atmosphere',
+                        pixelWidth: 26.0,
+                        color: COLORS.atmosphere,
+                        opacity: 0.32,
+                        exponent: 5.5,
+                        zOffset: -0.08,
+                        pulseSpeed: 1.3,
+                        pulseAmp: 0.15,
+                        phase: 1.2
+                    },
+                    {
+                        id: 'deep-bloom',
+                        pixelWidth: 14.0,
+                        color: COLORS.deepBlue,
+                        opacity: 0.50,
+                        exponent: 4.2,
+                        zOffset: -0.06,
+                        pulseSpeed: 1.5,
+                        pulseAmp: 0.14,
+                        phase: 0.8
+                    },
+                    {
+                        id: 'mid-glow',
+                        pixelWidth: 7.0,
+                        color: COLORS.neonBlue,
+                        opacity: 0.75,
+                        exponent: 3.2,
+                        zOffset: -0.04,
+                        pulseSpeed: 1.8,
+                        pulseAmp: 0.12,
+                        phase: 0.4
+                    },
+                    {
+                        id: 'inner-cyan',
+                        pixelWidth: 3.5,
+                        color: COLORS.innerCyan,
+                        opacity: 0.90,
+                        exponent: 2.4,
+                        zOffset: -0.02,
+                        pulseSpeed: 2.1,
+                        pulseAmp: 0.10,
+                        phase: 0.2
+                    },
+                    {
+                        id: 'core-line',
+                        pixelWidth: 1.8,
+                        color: COLORS.core,
+                        opacity: 1.0,
+                        exponent: 1.6,
+                        zOffset: 0.00,
+                        pulseSpeed: 2.4,
+                        pulseAmp: 0.06,
+                        phase: 0.0
+                    }
+                ];
+
+                ribbonLayers = [];
+
+                layerDefs.forEach(def => {
+                    const geo = createRibbonGeometry(dynamicPoints, def.pixelWidth, def.zOffset, normals);
+                    const mat = new THREE.ShaderMaterial({
+                        uniforms: {
+                            uColor: { value: def.color },
+                            uOpacity: { value: def.opacity },
+                            uExponent: { value: def.exponent },
+                            uPulse: { value: 1.0 }
+                        },
+                        vertexShader: ribbonVertexShader,
+                        fragmentShader: ribbonFragmentShader,
+                        transparent: true,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false,
+                        depthTest: false,
+                        side: THREE.DoubleSide
+                    });
+
+                    const mesh = new THREE.Mesh(geo, mat);
+                    rootGroup.add(mesh);
+
+                    ribbonLayers.push({
+                        mesh,
+                        def,
+                        mat
+                    });
+                });
+
+                // Degradê inferior
+                trailMat = new THREE.ShaderMaterial({
+                    uniforms: {
+                        uColor: { value: new THREE.Color(0x0A65DF) },
+                        uOpacity: { value: 0.26 },
+                        uPulse: { value: 1.0 }
+                    },
+                    vertexShader: trailVertex,
+                    fragmentShader: trailFragment,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    depthTest: false,
+                    side: THREE.DoubleSide
+                });
+
+                const trailGeo = createTrailGeometry(dynamicPoints, 48, -0.12, normals);
+                trailMesh = new THREE.Mesh(trailGeo, trailMat);
+                rootGroup.add(trailMesh);
+
+                // Pontinho de Luz Neon no final da linha
+                const dotGeo = new THREE.CircleGeometry(2.2, 24);
+                const dotMat = new THREE.MeshBasicMaterial({
+                    color: 0x62B8FF,
+                    transparent: true,
+                    opacity: 0.95,
+                    blending: THREE.AdditiveBlending
+                });
+                endGlowDot = new THREE.Mesh(dotGeo, dotMat);
+                endGlowDot.position.z = 0.02;
+                rootGroup.add(endGlowDot);
+
+                scene.add(rootGroup);
+            }
+
+            /*
+              Feixes Verticais Nítidos sob os Picos
+            */
+            let beamGroup;
+            let beamNodes = [];
+
+            function createBeams() {
+                beamGroup = new THREE.Group();
+                beamNodes = [];
+
+                const selected = [
+                    [-0.655, 0.30, 22, 0.20],
+                    [-0.475, -0.095, 12, 0.12],
+                    [-0.075, 0.53, 34, 0.26],
+                    [0.18, 0.13, 16, 0.14],
+                    [0.39, 0.10, 18, 0.14],
+                    [0.60, 0.045, 20, 0.15],
+                    [0.73, 0.205, 16, 0.15],
+                    [0.86, 0.21, 24, 0.18]
+                ];
+
+                selected.forEach((b, idx) => {
+                    const normX = b[0];
+                    const targetX = 6 + ((normX + 0.94) / (0.95 + 0.94)) * (width - 12);
+                    const h = b[2];
+                    const n = 8;
+
+                    for (let s = 0; s < n; s++) {
+                        const fade = Math.pow(1 - s / n, 1.6);
+                        const geo = new THREE.BufferGeometry();
+                        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, -0.10, 0, 0, -0.10]), 3));
+
+                        const mat = new THREE.LineBasicMaterial({
+                            color: COLORS.beam,
+                            transparent: true,
+                            opacity: b[3] * fade,
+                            blending: THREE.AdditiveBlending,
+                            depthWrite: false,
+                            depthTest: false
+                        });
+
+                        const line = new THREE.Line(geo, mat);
+                        beamGroup.add(line);
+
+                        beamNodes.push({
+                            line,
+                            targetX,
+                            s,
+                            n,
+                            h,
+                            baseOpacity: b[3] * fade,
+                            phase: idx * 0.85 + s * 0.15
+                        });
+                    }
+                });
+
+                scene.add(beamGroup);
+            }
+
+            function updateBeams(points, t) {
+                if (!beamNodes.length) return;
+
+                beamNodes.forEach(node => {
+                    let closestPt = points[0];
+                    let minDist = 9999;
+                    for (let i = 0; i < points.length; i++) {
+                        const d = Math.abs(points[i].x - node.targetX);
+                        if (d < minDist) {
+                            minDist = d;
+                            closestPt = points[i];
+                        }
+                    }
+
+                    const x = closestPt.x;
+                    const y = closestPt.y;
+                    const y1 = y + node.h * (node.s / node.n);
+                    const y2 = y + node.h * ((node.s + 1) / node.n);
+
+                    const pos = node.line.geometry.attributes.position.array;
+                    pos[0] = x; pos[1] = y1; pos[2] = -0.10;
+                    pos[3] = x; pos[4] = y2; pos[5] = -0.10;
+                    node.line.geometry.attributes.position.needsUpdate = true;
+
+                    const pulse = 0.85 + 0.15 * Math.sin(t * 1.6 + node.phase);
+                    node.line.material.opacity = node.baseOpacity * pulse;
+                });
+            }
+
+            /*
+              Loop de Animação Fluido a 60FPS
+            */
+            const clock = new THREE.Clock();
+
+            function update(t) {
+                const count = basePoints.length;
+                for (let i = 0; i < count; i++) {
+                    const base = basePoints[i];
+                    const u = i / (count - 1);
+
+                    const waveA = Math.sin(t * 1.6 + u * 12.0) * 0.75;
+                    const waveB = Math.cos(t * 2.4 - u * 8.0) * 0.40;
+                    const waveC = Math.sin(t * 0.9 + u * 4.0) * 0.50;
+
+                    const dy = waveA + waveB + waveC;
+                    const dx = Math.sin(t * 1.0 + u * 5.0) * 0.25;
+
+                    dynamicPoints[i].x = base.x + dx;
+                    dynamicPoints[i].y = base.y + dy;
+                }
+
+                const normals = computeScreenNormals(dynamicPoints, 4);
+
+                ribbonLayers.forEach(layer => {
+                    updateRibbonGeometry(layer.mesh.geometry, dynamicPoints, layer.def.pixelWidth, layer.def.zOffset, normals);
+
+                    const pulse = 0.88 +
+                        Math.sin(t * layer.def.pulseSpeed + layer.def.phase) * layer.def.pulseAmp +
+                        Math.sin(t * 0.75 + layer.def.phase * 0.5) * 0.05;
+                    layer.mat.uniforms.uPulse.value = pulse;
+                });
+
+                if (trailMesh && trailMat) {
+                    updateTrailGeometry(trailMesh.geometry, dynamicPoints, 48, -0.12, normals);
+                    trailMat.uniforms.uPulse.value = 0.88 + 0.12 * Math.sin(t * 1.5 + 0.5);
+                }
+
+                if (endGlowDot) {
+                    const lastPt = dynamicPoints[dynamicPoints.length - 1];
+                    endGlowDot.position.x = lastPt.x;
+                    endGlowDot.position.y = lastPt.y;
+                }
+
+                updateBeams(dynamicPoints, t);
+            }
+
+            function resize() {
+                rect = container.getBoundingClientRect();
+                width = rect.width || 313;
+                height = rect.height || 79;
+
+                camera.left = 0;
+                camera.right = width;
+                camera.top = 0;
+                camera.bottom = height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
+
+                buildCurve();
+            }
+
+            buildCurve();
+            createNeonComposition();
+            createBeams();
+
+            resize();
+            window.addEventListener('resize', resize, { passive: true });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const t = clock.getElapsedTime();
+                update(t);
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            /* ============================================================
+               2. ANIMAÇÃO SUAVE DO VALOR (R$ 85.420,00)
+            ============================================================ */
+            let currentValue = 0;
+            const targetValue = 85420;
+
+            function animateValue() {
+                currentValue += (targetValue - currentValue) * 0.08;
+
+                if (Math.abs(targetValue - currentValue) < 0.5) {
+                    currentValue = targetValue;
+                }
+
+                const formatted = currentValue.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL"
+                });
+
+                document.getElementById("value").textContent = formatted;
+
+                if (currentValue !== targetValue) {
+                    requestAnimationFrame(animateValue);
+                }
+            }
+
+            animateValue();
+        })();
+    </script>
+
+</body>
+
+</html>

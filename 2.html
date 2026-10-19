@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Distribuição do Estoque</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    :root {
+        --bg: #02070c;
+        --panel: #030a10;
+        --cyan: #00a9e8;
+        --cyan-soft: #0b5e7c;
+        --green: #19e66b;
+        --yellow: #ffd21c;
+        --blue: #2583ff;
+        --red: #ff3939;
+        --white: #f4f7fa;
+    }
+
+    html,
+    body {
+        width: 100%;
+        min-height: 100%;
+        margin: 0;
+    }
+
+    body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 28px;
+        background:
+            radial-gradient(circle at 22% 38%, rgba(0, 122, 170, .08), transparent 26%),
+            radial-gradient(circle at 80% 55%, rgba(0, 85, 120, .05), transparent 30%),
+            #010509;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--white);
+    }
+
+    /* CARD */
+    .dashboard-card {
+        position: relative;
+        width: min(864px, 96vw);
+        aspect-ratio: 864 / 414;
+        min-height: 350px;
+        overflow: hidden;
+        padding: 25px 38px 28px;
+        background:
+            radial-gradient(circle at 25% 55%, rgba(0, 112, 160, .07), transparent 32%),
+            linear-gradient(145deg, rgba(4, 15, 23, .98), rgba(1, 7, 12, .98));
+        border: 1px solid rgba(0, 180, 240, .55);
+        border-radius: 28px;
+        box-shadow:
+            inset 0 0 35px rgba(0, 110, 170, .05),
+            0 0 25px rgba(0, 0, 0, .45);
+    }
+
+    /* Futuristic cut-corner frame */
+    .dashboard-card::before,
+    .dashboard-card::after {
+        content: "";
+        position: absolute;
+        pointer-events: none;
+    }
+
+    .dashboard-card::before {
+        inset: 0;
+        border-radius: 28px;
+        background:
+            linear-gradient(135deg, transparent 0 16px, rgba(0,0,0,0) 16px) top left,
+            linear-gradient(315deg, transparent 0 16px, rgba(0,0,0,0) 16px) bottom right;
+        box-shadow:
+            inset 0 1px 0 rgba(150, 225, 255, .15),
+            inset 0 -1px 0 rgba(0, 170, 230, .18);
+    }
+
+    .dashboard-card::after {
+        width: 190px;
+        height: 1px;
+        right: -24px;
+        bottom: 21px;
+        background: linear-gradient(90deg, transparent, rgba(0, 193, 255, .85));
+        transform: rotate(-38deg);
+        box-shadow: 0 0 7px rgba(0, 184, 255, .6);
+        opacity: .65;
+    }
+
+    /* Tiny HUD decorations */
+    .hud-dot {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #099ee0;
+        box-shadow: 0 0 8px #099ee0;
+        opacity: .55;
+    }
+
+    .dot-1 { left: 75.6%; top: 15.1%; }
+    .dot-2 { left: 91.1%; top: 30.8%; }
+    .dot-3 { left: 39%; top: 28%; }
+    .dot-4 { left: 27.5%; top: 63%; }
+    .dot-5 { left: 6%; top: 85%; }
+
+    .header {
+        position: relative;
+        z-index: 2;
+        font-size: clamp(18px, 2.7vw, 29px);
+        font-weight: 500;
+        letter-spacing: .2px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }
+
+    .content {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 44% 56%;
+        align-items: center;
+        height: calc(100% - 55px);
+    }
+
+    /* CHART AREA */
+    .chart-area {
+        position: relative;
+        display: grid;
+        place-items: center;
+        height: 100%;
+    }
+
+    /* Partículas / Estrelas Cintilantes no Fundo */
+    #particles {
+        position: absolute;
+        inset: -10px;
+        width: calc(100% + 20px);
+        height: calc(100% + 20px);
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .chart {
+        width: min(320px, 31vw);
+        min-width: 245px;
+        aspect-ratio: 1;
+        position: relative;
+        filter: drop-shadow(0 0 16px rgba(0, 180, 255, .06));
+        z-index: 1;
+    }
+
+    svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .ring-base {
+        fill: none;
+        stroke: rgba(0, 88, 120, .16);
+        stroke-width: 35;
+    }
+
+    .ring-segment {
+        fill: none;
+        stroke-width: 35;
+        stroke-linecap: butt;
+        cursor: pointer;
+        transition:
+            stroke-dasharray 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+            stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+            stroke-width .25s ease,
+            filter .25s ease,
+            opacity .25s ease;
+    }
+
+    .ring-segment:hover,
+    .ring-segment.active {
+        stroke-width: 38;
+        filter: brightness(1.15) drop-shadow(0 0 6px currentColor);
+        opacity: 1 !important;
+    }
+
+    .ring-glow {
+        fill: none;
+        stroke-width: 35;
+        stroke-linecap: butt;
+        opacity: .35;
+        filter: url(#glow);
+        pointer-events: none;
+        transition:
+            stroke-dasharray 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+            stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+            stroke-width .25s ease,
+            opacity .25s ease,
+            filter .25s ease;
+    }
+
+    .ring-glow.active {
+        stroke-width: 38;
+        opacity: .70;
+        filter: url(#glow);
+    }
+
+    .green { stroke: var(--green); color: var(--green); }
+    .yellow { stroke: var(--yellow); color: var(--yellow); }
+    .blue { stroke: var(--blue); color: var(--blue); }
+    .red { stroke: var(--red); color: var(--red); }
+
+    .inner-ring {
+        fill: none;
+        stroke: rgba(0, 160, 220, .28);
+        stroke-width: 1;
+    }
+
+    /* =========================================================
+       CENTRO: CIRCULATÓRIA, HALO E CUBO 3D REAL
+    ========================================================== */
+
+    .center-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 190, 255, 0.16) 0%, rgba(0, 110, 180, 0.05) 50%, transparent 70%);
+        filter: blur(14px);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tech-circle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 132px;
+        height: 132px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 190, 255, 0.20);
+        box-shadow:
+            0 0 14px rgba(0, 180, 255, 0.06),
+            inset 0 0 18px rgba(0, 140, 255, 0.05);
+        pointer-events: none;
+        z-index: 2;
+        transition: transform 0.2s ease-out;
+    }
+
+    .tech-circle::before,
+    .tech-circle::after {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 50%;
+        border: 1px dashed rgba(0, 190, 255, 0.22);
+        animation: rotateTech 16s linear infinite;
+    }
+
+    .tech-circle::after {
+        inset: 22px;
+        border-style: solid;
+        border-color: rgba(0, 210, 255, 0.14);
+        animation-direction: reverse;
+        animation-duration: 10s;
+    }
+
+    @keyframes rotateTech {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Pontos orbitais cintilantes */
+    .dot {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: #00d9ff;
+        border-radius: 50%;
+        box-shadow:
+            0 0 6px #00d9ff,
+            0 0 12px rgba(0, 170, 255, 0.9);
+        z-index: 3;
+        pointer-events: none;
+        animation: dotPulse 2.4s ease-in-out infinite;
+    }
+
+    .dot.d1 { top: calc(50% - 47px); left: calc(50% - 2px); }
+    .dot.d2 { top: calc(50% - 2px); left: calc(50% + 45px); animation-delay: 0.6s; }
+    .dot.d3 { top: calc(50% + 45px); left: calc(50% - 2px); animation-delay: 1.2s; }
+    .dot.d4 { top: calc(50% - 2px); left: calc(50% - 47px); animation-delay: 1.8s; }
+
+    @keyframes dotPulse {
+        0%, 100% {
+            opacity: 0.3;
+            transform: scale(0.7);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.4);
+        }
+    }
+
+    /* Cubo 3D Real com Flutuação e Efeito Holográfico */
+    .cube-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100px;
+        height: 100px;
+        perspective: 600px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    .cube {
+        position: relative;
+        width: 46px;
+        height: 46px;
+        transform-style: preserve-3d;
+        transform: rotateX(-27deg) rotateY(40deg);
+        animation: cubeFloat 6s ease-in-out infinite;
+        transition: transform 0.15s ease-out;
+    }
+
+    .face {
+        position: absolute;
+        width: 46px;
+        height: 46px;
+        border: 1px solid rgba(0, 195, 255, 0.75);
+        background: rgba(0, 95, 150, 0.04);
+        box-shadow:
+            inset 0 0 14px rgba(0, 200, 255, 0.06),
+            0 0 6px rgba(0, 210, 255, 0.25);
+    }
+
+    .front  { transform: translateZ(23px); }
+    .back   { transform: rotateY(180deg) translateZ(23px); }
+    .right  { transform: rotateY(90deg) translateZ(23px); }
+    .left   { transform: rotateY(-90deg) translateZ(23px); }
+    .top    { transform: rotateX(90deg) translateZ(23px); }
+    .bottom { transform: rotateX(-90deg) translateZ(23px); }
+
+    .cube::before,
+    .cube::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 1px solid rgba(0, 190, 255, 0.20);
+    }
+
+    .cube::before {
+        transform: translateZ(-6px);
+    }
+
+    .cube::after {
+        transform: rotateY(90deg) translateZ(-6px);
+    }
+
+    @keyframes cubeFloat {
+        0%, 100% {
+            transform: translateY(0) rotateX(-27deg) rotateY(40deg);
+        }
+        50% {
+            transform: translateY(-5px) rotateX(-21deg) rotateY(48deg);
+        }
+    }
+
+    /* LEGENDA */
+    .legend {
+        display: grid;
+        gap: 21px;
+        padding-left: 6px;
+    }
+
+    .legend-row {
+        display: grid;
+        grid-template-columns: 31px 1fr auto;
+        gap: 16px;
+        align-items: center;
+        min-width: 0;
+        cursor: pointer;
+        transition: transform .25s ease, opacity .25s ease;
+    }
+
+    .legend-row:hover,
+    .legend-row.active {
+        transform: translateX(4px);
+        opacity: 1 !important;
+    }
+
+    .legend-row.dimmed,
+    .ring-segment.dimmed,
+    .ring-glow.dimmed {
+        opacity: 0.45 !important;
+    }
+
+    .legend-color {
+        width: 25px;
+        height: 25px;
+        border-radius: 6px;
+        box-shadow: 0 0 8px currentColor;
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .legend-row:hover .legend-color,
+    .legend-row.active .legend-color {
+        transform: scale(1.06);
+        box-shadow: 0 0 12px currentColor;
+    }
+
+    .legend-label {
+        font-size: clamp(17px, 2.2vw, 25px);
+        font-weight: 400;
+        white-space: nowrap;
+    }
+
+    .legend-value {
+        font-size: clamp(17px, 2.2vw, 25px);
+        font-weight: 400;
+        min-width: 75px;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .green-box {
+        color: var(--green);
+        background: linear-gradient(145deg, #27f47a, #0abf51);
+    }
+
+    .yellow-box {
+        color: var(--yellow);
+        background: linear-gradient(145deg, #ffe02e, #eab300);
+    }
+
+    .blue-box {
+        color: var(--blue);
+        background: linear-gradient(145deg, #3d9bff, #1064e5);
+    }
+
+    .red-box {
+        color: var(--red);
+        background: linear-gradient(145deg, #ff5555, #df2525);
+    }
+
+    /* Responsive */
+    @media (max-width: 690px) {
+        body {
+            padding: 14px;
+        }
+
+        .dashboard-card {
+            width: 100%;
+            aspect-ratio: auto;
+            min-height: 650px;
+            padding: 23px 22px;
+            border-radius: 20px;
+        }
+
+        .content {
+            grid-template-columns: 1fr;
+            height: auto;
+            gap: 10px;
+        }
+
+        .chart {
+            width: min(330px, 78vw);
+        }
+
+        .legend {
+            padding: 0 6px 10px;
+            gap: 17px;
+        }
+
+        .legend-row {
+            grid-template-columns: 27px 1fr auto;
+            gap: 12px;
+        }
+
+        .legend-label,
+        .legend-value {
+            font-size: 20px;
+        }
+
+        .header {
+            margin-bottom: 10px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="dashboard-card">
+    <span class="hud-dot dot-1"></span>
+    <span class="hud-dot dot-2"></span>
+    <span class="hud-dot dot-3"></span>
+    <span class="hud-dot dot-4"></span>
+    <span class="hud-dot dot-5"></span>
+
+    <div class="header">DISTRIBUIÇÃO DO ESTOQUE</div>
+
+    <div class="content">
+
+        <div class="chart-area">
+            <!-- Partículas / Estrelas Cintilantes -->
+            <canvas id="particles"></canvas>
+
+            <div class="chart">
+                <svg viewBox="0 0 300 300" aria-label="Distribuição do estoque">
+                    <defs>
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Base -->
+                    <circle class="ring-base" cx="150" cy="150" r="113"></circle>
+
+                    <!-- Glow copies -->
+                    <g transform="rotate(-90 150 150)">
+                        <circle id="glow-green" class="ring-glow green" cx="150" cy="150" r="113"></circle>
+                        <circle id="glow-yellow" class="ring-glow yellow" cx="150" cy="150" r="113"></circle>
+                        <circle id="glow-blue" class="ring-glow blue" cx="150" cy="150" r="113"></circle>
+                        <circle id="glow-red" class="ring-glow red" cx="150" cy="150" r="113"></circle>
+
+                        <!-- Actual segmented ring -->
+                        <circle id="seg-green" class="ring-segment green" cx="150" cy="150" r="113"></circle>
+                        <circle id="seg-yellow" class="ring-segment yellow" cx="150" cy="150" r="113"></circle>
+                        <circle id="seg-blue" class="ring-segment blue" cx="150" cy="150" r="113"></circle>
+                        <circle id="seg-red" class="ring-segment red" cx="150" cy="150" r="113"></circle>
+                    </g>
+
+                    <!-- Thin futuristic inner structure -->
+                    <circle class="inner-ring" cx="150" cy="150" r="91"></circle>
+                    <circle class="inner-ring" cx="150" cy="150" r="92"></circle>
+                </svg>
+
+                <!-- Halo Central -->
+                <div class="center-glow"></div>
+
+                <!-- Circulatória Tecnológica (Anéis Giratórios) -->
+                <div class="tech-circle"></div>
+
+                <!-- Pontos Orbitais -->
+                <div class="dot d1"></div>
+                <div class="dot d2"></div>
+                <div class="dot d3"></div>
+                <div class="dot d4"></div>
+
+                <!-- Cubo 3D Holográfico com Flutuação e Perspectiva -->
+                <div class="cube-container">
+                    <div class="cube">
+                        <div class="face front"></div>
+                        <div class="face back"></div>
+                        <div class="face right"></div>
+                        <div class="face left"></div>
+                        <div class="face top"></div>
+                        <div class="face bottom"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend" id="legend">
+            <div class="legend-row" data-target="green">
+                <span class="legend-color green-box"></span>
+                <span class="legend-label">Disponível</span>
+                <span class="legend-value">64.2%</span>
+            </div>
+
+            <div class="legend-row" data-target="yellow">
+                <span class="legend-color yellow-box"></span>
+                <span class="legend-label">Reservado</span>
+                <span class="legend-value">15.2%</span>
+            </div>
+
+            <div class="legend-row" data-target="blue">
+                <span class="legend-color blue-box"></span>
+                <span class="legend-label">Em trânsito</span>
+                <span class="legend-value">12.1%</span>
+            </div>
+
+            <div class="legend-row" data-target="red">
+                <span class="legend-color red-box"></span>
+                <span class="legend-label">Bloqueado</span>
+                <span class="legend-value">8.5%</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    /*
+     * Os valores abaixo controlam todo o gráfico.
+     * Você pode trocar os números sem mexer no desenho.
+     */
+    const data = [
+        { id: "green",  value: 64.2 },
+        { id: "yellow", value: 15.2 },
+        { id: "blue",   value: 12.1 },
+        { id: "red",    value: 8.5 }
+    ];
+
+    const radius = 113;
+    const circumference = 2 * Math.PI * radius;
+    const gap = 0;
+    let accumulated = 0;
+
+    const calculatedItems = data.map(item => {
+        const visible = (item.value / 100) * circumference;
+        const dash = Math.max(visible - gap, 0);
+        const offset = -accumulated;
+        accumulated += visible;
+        return {
+            ...item,
+            dash,
+            offset
+        };
+    });
+
+    /*
+     * 1. Configuração inicial zerada para a animação de entrada (Loading Sweep)
+     */
+    calculatedItems.forEach(item => {
+        const segment = document.getElementById(`seg-${item.id}`);
+        const glow = document.getElementById(`glow-${item.id}`);
+
+        segment.style.strokeDasharray = `0 ${circumference}`;
+        segment.style.strokeDashoffset = `${item.offset}`;
+
+        glow.style.strokeDasharray = `0 ${circumference}`;
+        glow.style.strokeDashoffset = `${item.offset}`;
+    });
+
+    /*
+     * 2. Animação de carregamento fluida com transição suave
+     */
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            calculatedItems.forEach(item => {
+                const segment = document.getElementById(`seg-${item.id}`);
+                const glow = document.getElementById(`glow-${item.id}`);
+
+                segment.style.strokeDasharray = `${item.dash} ${circumference - item.dash}`;
+                glow.style.strokeDasharray = `${item.dash} ${circumference - item.dash}`;
+            });
+        }, 120);
+    });
+
+    /*
+     * 3. Hover interativo bidirecional calibrado e suave
+     */
+    const legendRows = document.querySelectorAll(".legend-row");
+
+    function highlight(id) {
+        calculatedItems.forEach(item => {
+            const seg = document.getElementById(`seg-${item.id}`);
+            const gl = document.getElementById(`glow-${item.id}`);
+            const row = document.querySelector(`.legend-row[data-target="${item.id}"]`);
+
+            if (item.id === id) {
+                seg.classList.add("active");
+                gl.classList.add("active");
+                if (row) row.classList.add("active");
+
+                seg.classList.remove("dimmed");
+                gl.classList.remove("dimmed");
+                if (row) row.classList.remove("dimmed");
+            } else {
+                seg.classList.add("dimmed");
+                gl.classList.add("dimmed");
+                if (row) row.classList.add("dimmed");
+
+                seg.classList.remove("active");
+                gl.classList.remove("active");
+                if (row) row.classList.remove("active");
+            }
+        });
+    }
+
+    function resetHighlight() {
+        calculatedItems.forEach(item => {
+            const seg = document.getElementById(`seg-${item.id}`);
+            const gl = document.getElementById(`glow-${item.id}`);
+            const row = document.querySelector(`.legend-row[data-target="${item.id}"]`);
+
+            seg.classList.remove("active", "dimmed");
+            gl.classList.remove("active", "dimmed");
+            if (row) row.classList.remove("active", "dimmed");
+        });
+    }
+
+    calculatedItems.forEach(item => {
+        const seg = document.getElementById(`seg-${item.id}`);
+        seg.addEventListener("mouseenter", () => highlight(item.id));
+        seg.addEventListener("mouseleave", resetHighlight);
+    });
+
+    legendRows.forEach(row => {
+        const targetId = row.dataset.target;
+        row.addEventListener("mouseenter", () => highlight(targetId));
+        row.addEventListener("mouseleave", resetHighlight);
+    });
+
+    /* ============================================================
+       SISTEMA DE PARTÍCULAS / ESTRELAS CINTILANTES
+    ============================================================ */
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        createParticles();
+    }
+
+    function createParticles() {
+        particles = [];
+        const total = 50;
+        const width = canvas.clientWidth || 320;
+        const height = canvas.clientHeight || 320;
+
+        for (let i = 0; i < total; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 1.5 + 0.3,
+                speedX: (Math.random() - 0.5) * 0.18,
+                speedY: (Math.random() - 0.5) * 0.18,
+                alpha: Math.random() * 0.55 + 0.15,
+                pulseSpeed: Math.random() * 0.02 + 0.008,
+                pulseDir: Math.random() > 0.5 ? 1 : -1
+            });
+        }
+    }
+
+    function drawParticles() {
+        const width = canvas.clientWidth || 320;
+        const height = canvas.clientHeight || 320;
+
+        ctx.clearRect(0, 0, width, height);
+
+        particles.forEach(p => {
+            p.x += p.speedX;
+            p.y += p.speedY;
+
+            p.alpha += p.pulseSpeed * p.pulseDir;
+            if (p.alpha > 0.75) { p.alpha = 0.75; p.pulseDir = -1; }
+            else if (p.alpha < 0.1) { p.alpha = 0.1; p.pulseDir = 1; }
+
+            if (p.x < 0) p.x = width;
+            if (p.x > width) p.x = 0;
+            if (p.y < 0) p.y = height;
+            if (p.y > height) p.y = 0;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 190, 255, ${p.alpha})`;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = "rgba(0, 190, 255, 0.75)";
+            ctx.fill();
+        });
+
+        requestAnimationFrame(drawParticles);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    drawParticles();
+
+    /* ============================================================
+       PARALLAX 3D DO CUBO COM O MOVIMENTO DO MOUSE
+    ============================================================ */
+    const cubeEl = document.querySelector(".cube");
+    const techCircleEl = document.querySelector(".tech-circle");
+
+    document.addEventListener("mousemove", event => {
+        const x = (event.clientX / window.innerWidth - 0.5);
+        const y = (event.clientY / window.innerHeight - 0.5);
+
+        if (cubeEl) {
+            cubeEl.style.transform = `
+                rotateX(${-27 - y * 18}deg)
+                rotateY(${40 + x * 26}deg)
+            `;
+        }
+        if (techCircleEl) {
+            techCircleEl.style.transform = `
+                translate(-50%, -50%)
+                rotateX(${y * 10}deg)
+                rotateY(${x * 10}deg)
+            `;
+        }
+    });
+</script>
+
+</body>
+</html>
